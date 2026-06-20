@@ -414,14 +414,49 @@
 .historyVoice {
   display: flex;
   align-items: center;
-  gap: $spacing-xs;
-  font-size: $font-size-sm;
-  color: $color-primary;
+  gap: $spacing-sm;
   margin-bottom: $spacing-sm;
 }
 
-.historyVoiceIcon {
-  font-size: 32rpx;
+.historyPlayBtn {
+  @include button-reset;
+  width: 56rpx;
+  height: 56rpx;
+  min-width: 56rpx;
+  border-radius: 50%;
+  background: $color-primary;
+  color: $color-text-white;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.playing {
+    background: $color-warning;
+  }
+}
+
+.historyVoiceProgress {
+  flex: 1;
+  height: 6rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.historyVoiceBar {
+  height: 100%;
+  background: $color-primary;
+  border-radius: $radius-round;
+  transition: width 1s linear;
+}
+
+.historyVoiceDuration {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+  width: 60rpx;
+  text-align: right;
 }
 
 .historyPhotos {
@@ -447,12 +482,29 @@
   font-size: $font-size-sm;
   color: $color-danger;
   font-weight: $font-weight-medium;
+  margin-bottom: $spacing-xs;
 }
 
 .historyRejectText {
   font-size: $font-size-sm;
   color: $color-danger;
   line-height: 1.6;
+}
+
+.historyRejectPhotos {
+  margin-top: $spacing-sm;
+}
+
+.historyRejectPhotosLabel {
+  font-size: $font-size-sm;
+  color: $color-danger;
+  font-weight: $font-weight-medium;
+  margin-bottom: $spacing-xs;
+}
+
+.historyRejectPhotoGrid {
+  display: flex;
+  gap: $spacing-xs;
 }
 
 .historyMeta {

@@ -76,6 +76,7 @@ export interface SubmissionHistoryEntry {
   submitTime: string;
   result: 'pending_review' | 'approved' | 'rejected';
   rejectReason?: string;
+  rejectPhotos?: string[];
   reviewer?: string;
   reviewTime?: string;
 }

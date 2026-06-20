@@ -8,7 +8,7 @@ interface AppContextType {
   rectifySubmissions: Record<string, RectifySubmission>;
   confirmOrder: (orderId: string, confirmerName: string, confirmerRole: string, teamType: TeamType, teamLabel: string) => boolean;
   approveRectify: (rectifyId: string, reviewer: string) => void;
-  rejectRectify: (rectifyId: string, reviewer: string, reason: string) => void;
+  rejectRectify: (rectifyId: string, reviewer: string, reason: string, rejectPhotos?: string[]) => void;
   submitRectify: (rectifyId: string, data: RectifySubmission) => void;
   getRectifySubmission: (rectifyId: string) => RectifySubmission | undefined;
 }
@@ -44,9 +44,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           confirmTime: now()
         };
         const updatedSignRecords = [...o.signRecords, newRecord];
+        const signedTeamTypes = new Set(updatedSignRecords.map((r) => r.teamType));
+        const requiredTeams = o.requiredTeams || ['scaffolding', 'concrete'];
+        const allSigned = requiredTeams.every((t) => signedTeamTypes.has(t));
         return {
           ...o,
-          status: 'confirmed' as const,
+          status: allSigned ? 'confirmed' as const : 'pending' as const,
           confirmTime: newRecord.confirmTime,
           confirmer: confirmerName,
           signRecords: updatedSignRecords
@@ -79,14 +82,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     );
   }, []);
 
-  const rejectRectify = useCallback((rectifyId: string, reviewer: string, reason: string) => {
+  const rejectRectify = useCallback((rectifyId: string, reviewer: string, reason: string, rejectPhotos?: string[]) => {
     setRectifyList((prev) =>
       prev.map((r) => {
         if (r.id !== rectifyId) return r;
         const reviewTime = now();
         const updatedHistory = r.submissionHistory.map((entry, idx) => {
           if (idx === r.submissionHistory.length - 1) {
-            return { ...entry, result: 'rejected' as const, rejectReason: reason, reviewer, reviewTime };
+            return { ...entry, result: 'rejected' as const, rejectReason: reason, rejectPhotos, reviewer, reviewTime };
           }
           return entry;
         });

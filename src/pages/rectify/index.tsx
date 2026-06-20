@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, ScrollView } from '@tarojs/components';
+import { View, Text, Button, ScrollView, Image } from '@tarojs/components';
 import classnames from 'classnames';
 import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -46,17 +46,48 @@ const RectifyPage: React.FC = () => {
 
   const handleReject = (id: string, e) => {
     e.stopPropagation();
-    Taro.showModal({
-      title: '打回整改',
-      editable: true,
-      placeholderText: '请输入打回原因',
-      confirmText: '打回',
-      cancelText: '取消',
+
+    Taro.showActionSheet({
+      itemList: ['写原因+批注照片', '只写原因'],
       success: (res) => {
-        if (res.confirm) {
-          const reason = res.content?.trim() || '整改不合格，请重新处理';
-          rejectRectify(id, '项目部审核', reason);
-          Taro.showToast({ title: '已打回', icon: 'none', duration: 1500 });
+        if (res.tapIndex === 0) {
+          Taro.chooseImage({
+            count: 2,
+            sizeType: ['compressed'],
+            sourceType: ['album', 'camera'],
+            success: (imgRes) => {
+              const rejectPhotos = imgRes.tempFilePaths;
+              Taro.showModal({
+                title: '打回整改',
+                editable: true,
+                placeholderText: '请输入打回原因',
+                confirmText: '打回',
+                cancelText: '取消',
+                success: (modalRes) => {
+                  if (modalRes.confirm) {
+                    const reason = modalRes.content?.trim() || '整改不合格，请重新处理';
+                    rejectRectify(id, '项目部审核', reason, rejectPhotos);
+                    Taro.showToast({ title: '已打回', icon: 'none', duration: 1500 });
+                  }
+                }
+              });
+            }
+          });
+        } else {
+          Taro.showModal({
+            title: '打回整改',
+            editable: true,
+            placeholderText: '请输入打回原因',
+            confirmText: '打回',
+            cancelText: '取消',
+            success: (res) => {
+              if (res.confirm) {
+                const reason = res.content?.trim() || '整改不合格，请重新处理';
+                rejectRectify(id, '项目部审核', reason);
+                Taro.showToast({ title: '已打回', icon: 'none', duration: 1500 });
+              }
+            }
+          });
         }
       }
     });

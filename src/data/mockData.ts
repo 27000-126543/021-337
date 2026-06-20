@@ -101,7 +101,7 @@ export const mockOrders: PourOrder[] = [
     reason: '多个测点超预警值',
     detailReason: 'C区有5个监测点超过预警值，其中3个点超过危险值，模板体系存在较大安全风险，立即停止所有作业，人员全部撤离至安全区域。',
     publishTime: '2024-01-15 21:45', publisher: '张工（安全总监）',
-    status: 'confirmed',
+    status: 'pending',
     signRecords: [
       { id: 'sign-003', confirmerName: '赵班长', confirmerRole: '班组长', teamType: 'scaffolding', teamLabel: '架子工班组', confirmTime: '2024-01-15 21:48' }
     ],
@@ -124,6 +124,7 @@ export const mockRectifyList: RectifyItem[] = [
     type: 'base_plate', typeLabel: '垫板',
     submissionHistory: [{
       round: 1, photos: ['https://picsum.photos/id/200/300/300'],
+      voicePath: 'https://www.w3schools.com/html/horse.mp3',
       voiceDuration: 30, textDesc: '已更换B区3处下沉垫板，使用20mm厚钢板垫板替换',
       submitTime: '2024-01-16 07:30', result: 'pending_review'
     }]
@@ -136,6 +137,7 @@ export const mockRectifyList: RectifyItem[] = [
     type: 'jacking', typeLabel: '顶托',
     submissionHistory: [{
       round: 1, photos: ['https://picsum.photos/id/300/300/300'],
+      voicePath: 'https://www.w3schools.com/html/horse.mp3',
       voiceDuration: 45, textDesc: '已调整C区5个顶托，伸出长度控制在规范范围内',
       submitTime: '2024-01-15 22:00', result: 'approved', reviewer: '张工', reviewTime: '2024-01-15 23:00'
     }]
@@ -149,9 +151,11 @@ export const mockRectifyList: RectifyItem[] = [
     type: 'scissors_brace', typeLabel: '剪刀撑',
     submissionHistory: [{
       round: 1, photos: ['https://picsum.photos/id/400/300/300'],
+      voicePath: 'https://www.w3schools.com/html/horse.mp3',
       voiceDuration: 20, textDesc: '已补充横向剪刀撑',
       submitTime: '2024-01-15 22:00', result: 'rejected',
       rejectReason: '照片不清晰，无法确认加固位置，请重新拍照上传，确保能看到立杆编号和加固部位',
+      rejectPhotos: ['https://picsum.photos/id/450/300/300', 'https://picsum.photos/id/451/300/300'],
       reviewer: '张工', reviewTime: '2024-01-15 23:10'
     }]
   },

@@ -7,12 +7,20 @@ import StatusCard from '@/components/StatusCard';
 import MeasurePointItem from '@/components/MeasurePointItem';
 import { useAppStore } from '@/store';
 import { mockSections } from '@/data/mockData';
-import { ConstructionSection, MeasurePoint, TeamType } from '@/types';
+import { ConstructionSection, MeasurePoint, TeamType, PourOrder, RectifyItem } from '@/types';
 
 const teamLabels: Record<TeamType, string> = {
   scaffolding: '架子工班组',
   concrete: '混凝土班组'
 };
+
+interface TimelineEvent {
+  time: string;
+  type: 'order_publish' | 'order_sign' | 'rectify_submit' | 'rectify_approve' | 'rectify_reject';
+  title: string;
+  desc?: string;
+  status: 'done' | 'pending';
+}
 
 const RiskPage: React.FC = () => {
   const [activeSectionId, setActiveSectionId] = useState<string>(mockSections[0].id);
@@ -79,11 +87,93 @@ const RiskPage: React.FC = () => {
   const getRelatedOrders = (orderIds: string[]) => orders.filter((o) => orderIds.includes(o.id));
   const getRelatedRectifyItems = (rectifyIds: string[]) => rectifyList.filter((r) => rectifyIds.includes(r.id));
 
-  const getOrderSignStatus = (order: any) => {
+  const getOrderSignStatus = (order: PourOrder) => {
     const requiredTeams = order.requiredTeams || [];
-    const signedTeams = new Set(order.signRecords.map((r: any) => r.teamType));
+    const signedTeams = new Set(order.signRecords.map((r) => r.teamType));
     const unsignedTeams = requiredTeams.filter((t: TeamType) => !signedTeams.has(t));
     return { signedTeams, unsignedTeams, allSigned: unsignedTeams.length === 0 };
+  };
+
+  const buildTimeline = (point: MeasurePoint): TimelineEvent[] => {
+    const events: TimelineEvent[] = [];
+    const relatedOrders = getRelatedOrders(point.relatedOrderIds);
+    const relatedRectifies = getRelatedRectifyItems(point.relatedRectifyIds);
+
+    relatedOrders.forEach((order) => {
+      events.push({
+        time: order.publishTime,
+        type: 'order_publish',
+        title: `${order.typeLabel}发布`,
+        desc: order.title,
+        status: 'done'
+      });
+      order.signRecords.forEach((record) => {
+        events.push({
+          time: record.confirmTime,
+          type: 'order_sign',
+          title: `${record.teamLabel}签收`,
+          desc: record.confirmerName,
+          status: 'done'
+        });
+      });
+      const { unsignedTeams } = getOrderSignStatus(order);
+      unsignedTeams.forEach((team: TeamType) => {
+        events.push({
+          time: '--',
+          type: 'order_sign',
+          title: `${teamLabels[team]}签收`,
+          desc: '待确认',
+          status: 'pending'
+        });
+      });
+    });
+
+    relatedRectifies.forEach((item) => {
+      item.submissionHistory.forEach((entry) => {
+        events.push({
+          time: entry.submitTime,
+          type: 'rectify_submit',
+          title: `第${entry.round}次整改提交`,
+          desc: item.title,
+          status: 'done'
+        });
+        if (entry.result === 'approved') {
+          events.push({
+            time: entry.reviewTime || '',
+            type: 'rectify_approve',
+            title: '审核通过',
+            desc: entry.reviewer,
+            status: 'done'
+          });
+        } else if (entry.result === 'rejected') {
+          events.push({
+            time: entry.reviewTime || '',
+            type: 'rectify_reject',
+            title: '审核打回',
+            desc: entry.rejectReason,
+            status: 'done'
+          });
+        }
+      });
+      if (item.status === 'pending') {
+        events.push({
+          time: '--',
+          type: 'rectify_submit',
+          title: '待整改提交',
+          desc: item.title,
+          status: 'pending'
+        });
+      }
+    });
+
+    events.sort((a, b) => {
+      if (a.status !== b.status) return a.status === 'done' ? -1 : 1;
+      if (a.time === '--') return 1;
+      if (b.time === '--') return -1;
+      return a.time > b.time ? 1 : -1;
+    });
+
+    return events;
   };
 
   if (!activeSection) {
@@ -218,6 +308,27 @@ const RiskPage: React.FC = () => {
                       </View>
                     </View>
                   ))}
+                </View>
+              )}
+
+              {(selectedPoint.relatedOrderIds.length > 0 || selectedPoint.relatedRectifyIds.length > 0) && (
+                <View className={styles.timelineSection}>
+                  <Text className={styles.timelineTitle}>处置跟踪</Text>
+                  <View className={styles.timelineList}>
+                    {buildTimeline(selectedPoint).map((event, index) => (
+                      <View key={index} className={classnames(styles.timelineItem, event.status === 'pending' && styles.pending)}>
+                        <View className={styles.timelineDot}></View>
+                        <View className={styles.timelineLine}></View>
+                        <View className={styles.timelineContent}>
+                          <View className={styles.timelineHeader}>
+                            <Text className={styles.timelineTitleText}>{event.title}</Text>
+                            <Text className={styles.timelineTime}>{event.time}</Text>
+                          </View>
+                          {event.desc && <Text className={styles.timelineDesc}>{event.desc}</Text>}
+                        </View>
+                      </View>
+                    ))}
+                  </View>
                 </View>
               )}
 

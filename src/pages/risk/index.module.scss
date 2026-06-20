@@ -402,3 +402,92 @@
   color: $color-text-tertiary;
   margin-top: 2rpx;
 }
+
+.timelineSection {
+  margin-bottom: $spacing-lg;
+}
+
+.timelineTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.timelineList {
+  position: relative;
+  padding-left: $spacing-md;
+}
+
+.timelineItem {
+  position: relative;
+  padding-bottom: $spacing-md;
+
+  &:last-child {
+    padding-bottom: 0;
+
+    .timelineLine {
+      display: none;
+    }
+  }
+
+  &.pending {
+    .timelineDot {
+      background: $color-bg-hover;
+      border: 2rpx solid $color-text-tertiary;
+    }
+    .timelineTitleText {
+      color: $color-text-tertiary;
+    }
+  }
+}
+
+.timelineDot {
+  position: absolute;
+  left: -$spacing-md;
+  top: 6rpx;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: $color-primary;
+  z-index: 1;
+}
+
+.timelineLine {
+  position: absolute;
+  left: calc(-#{$spacing-md} + 9rpx);
+  top: 26rpx;
+  bottom: 0;
+  width: 2rpx;
+  background: $color-divider;
+}
+
+.timelineContent {
+  background: $color-bg-page;
+  border-radius: $radius-sm;
+  padding: $spacing-sm $spacing-md;
+}
+
+.timelineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4rpx;
+}
+
+.timelineTitleText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.timelineTime {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.timelineDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.5;
+}

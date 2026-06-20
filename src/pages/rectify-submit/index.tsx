@@ -29,6 +29,9 @@ const RectifySubmitPage: React.FC = () => {
   const [savedVoiceDuration, setSavedVoiceDuration] = useState(0);
   const [savedVoicePath, setSavedVoicePath] = useState('');
 
+  const [playingHistoryRound, setPlayingHistoryRound] = useState<number | null>(null);
+  const [historyPlayProgress, setHistoryPlayProgress] = useState<number>(0);
+
   const {
     isRecording,
     hasRecorded,
@@ -43,6 +46,8 @@ const RectifySubmitPage: React.FC = () => {
   } = useRecorder();
 
   const audioCtxRef = useRef<any>(null);
+  const historyAudioCtxRef = useRef<any>(null);
+  const historyTimerRef = useRef<any>(null);
 
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | null = null;
@@ -94,6 +99,20 @@ const RectifySubmitPage: React.FC = () => {
     if (found) setRectifyItem(found);
   });
 
+  useEffect(() => {
+    return () => {
+      if (audioCtxRef.current) {
+        try { audioCtxRef.current.destroy(); } catch (e) {}
+      }
+      if (historyAudioCtxRef.current) {
+        try { historyAudioCtxRef.current.destroy(); } catch (e) {}
+      }
+      if (historyTimerRef.current) {
+        clearInterval(historyTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleAddPhoto = () => {
     Taro.chooseImage({
       count: 3 - photos.length,
@@ -131,8 +150,7 @@ const RectifySubmitPage: React.FC = () => {
     const playSrc = hasRecorded ? voicePath : savedVoicePath;
     if (playSrc) {
       if (audioCtxRef.current) {
-        audioCtxRef.current.stop();
-        audioCtxRef.current.destroy();
+        try { audioCtxRef.current.stop(); audioCtxRef.current.destroy(); } catch (e) {}
       }
       const ctx = Taro.createInnerAudioContext();
       ctx.src = playSrc;
@@ -145,6 +163,78 @@ const RectifySubmitPage: React.FC = () => {
     } else {
       Taro.showToast({ title: `语音说明 ${displayDuration}"`, icon: 'none', duration: 1500 });
     }
+  };
+
+  const handleHistoryPlayToggle = (entry: SubmissionHistoryEntry) => {
+    if (!entry.voicePath) {
+      Taro.showToast({ title: `语音说明 ${entry.voiceDuration}"`, icon: 'none', duration: 1500 });
+      return;
+    }
+
+    if (playingHistoryRound === entry.round) {
+      if (historyAudioCtxRef.current) {
+        try { historyAudioCtxRef.current.stop(); historyAudioCtxRef.current.destroy(); } catch (e) {}
+        historyAudioCtxRef.current = null;
+      }
+      if (historyTimerRef.current) {
+        clearInterval(historyTimerRef.current);
+        historyTimerRef.current = null;
+      }
+      setPlayingHistoryRound(null);
+      setHistoryPlayProgress(0);
+      return;
+    }
+
+    if (historyAudioCtxRef.current) {
+      try { historyAudioCtxRef.current.stop(); historyAudioCtxRef.current.destroy(); } catch (e) {}
+    }
+    if (historyTimerRef.current) {
+      clearInterval(historyTimerRef.current);
+    }
+
+    const ctx = Taro.createInnerAudioContext();
+    ctx.src = entry.voicePath;
+    historyAudioCtxRef.current = ctx;
+
+    let progress = 0;
+    const duration = entry.voiceDuration || 1;
+    historyTimerRef.current = setInterval(() => {
+      progress += 1;
+      setHistoryPlayProgress(Math.min(progress / duration, 1) * 100);
+      if (progress >= duration) {
+        clearInterval(historyTimerRef.current);
+        historyTimerRef.current = null;
+        setPlayingHistoryRound(null);
+        setHistoryPlayProgress(0);
+      }
+    }, 1000);
+
+    ctx.onEnded(() => {
+      if (historyTimerRef.current) {
+        clearInterval(historyTimerRef.current);
+        historyTimerRef.current = null;
+      }
+      setPlayingHistoryRound(null);
+      setHistoryPlayProgress(0);
+      try { ctx.destroy(); } catch (e) {}
+      if (historyAudioCtxRef.current === ctx) {
+        historyAudioCtxRef.current = null;
+      }
+    });
+
+    ctx.onError(() => {
+      if (historyTimerRef.current) {
+        clearInterval(historyTimerRef.current);
+        historyTimerRef.current = null;
+      }
+      setPlayingHistoryRound(null);
+      setHistoryPlayProgress(0);
+      Taro.showToast({ title: `语音说明 ${entry.voiceDuration}"`, icon: 'none', duration: 1500 });
+    });
+
+    setPlayingHistoryRound(entry.round);
+    setHistoryPlayProgress(0);
+    ctx.play();
   };
 
   const handleDeleteVoice = () => {
@@ -215,13 +305,27 @@ const RectifySubmitPage: React.FC = () => {
               </View>
             </View>
             <Text className={styles.historyTime}>{entry.submitTime}</Text>
-            {entry.textDesc && <Text className={styles.historyDesc}>{entry.textDesc}</Text>}
+
             {entry.voiceDuration > 0 && (
               <View className={styles.historyVoice}>
-                <Text className={styles.historyVoiceIcon}>🎤</Text>
-                <Text>语音说明 {entry.voiceDuration}"</Text>
+                <Button
+                  className={classnames(styles.historyPlayBtn, playingHistoryRound === entry.round && styles.playing)}
+                  onClick={() => handleHistoryPlayToggle(entry)}
+                >
+                  {playingHistoryRound === entry.round ? '❚❚' : '▶'}
+                </Button>
+                <View className={styles.historyVoiceProgress}>
+                  <View
+                    className={styles.historyVoiceBar}
+                    style={{ width: playingHistoryRound === entry.round ? `${historyPlayProgress}%` : '0%' }}
+                  />
+                </View>
+                <Text className={styles.historyVoiceDuration}>{entry.voiceDuration}"</Text>
               </View>
             )}
+
+            {entry.textDesc && <Text className={styles.historyDesc}>{entry.textDesc}</Text>}
+
             {entry.photos && entry.photos.length > 0 && (
               <View className={styles.historyPhotos}>
                 {entry.photos.map((p, i) => (
@@ -231,12 +335,26 @@ const RectifySubmitPage: React.FC = () => {
                 ))}
               </View>
             )}
+
             {entry.rejectReason && (
               <View className={styles.historyReject}>
-                <Text className={styles.historyRejectLabel}>打回原因：</Text>
+                <Text className={styles.historyRejectLabel}>打回原因</Text>
                 <Text className={styles.historyRejectText}>{entry.rejectReason}</Text>
+                {entry.rejectPhotos && entry.rejectPhotos.length > 0 && (
+                  <View className={styles.historyRejectPhotos}>
+                    <Text className={styles.historyRejectPhotosLabel}>批注照片</Text>
+                    <View className={styles.historyRejectPhotoGrid}>
+                      {entry.rejectPhotos.map((p, i) => (
+                        <Image key={i} className={styles.historyPhoto} src={p} mode="aspectFill"
+                          onClick={() => Taro.previewImage({ urls: entry.rejectPhotos, current: p })}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                )}
               </View>
             )}
+
             {entry.reviewer && entry.reviewTime && (
               <Text className={styles.historyMeta}>{entry.reviewer} {entry.reviewTime}</Text>
             )}
