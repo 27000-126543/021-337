@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { View, Text, Button, ScrollView } from '@tarojs/components';
 import classnames from 'classnames';
-import Taro from '@tarojs/taro';
+import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
-import { mockRectifyList } from '@/data/mockData';
-import { RectifyItem } from '@/types';
+import { useAppStore } from '@/store';
 
 const RectifyPage: React.FC = () => {
-  const [list, setList] = useState<RectifyItem[]>(mockRectifyList);
+  const { rectifyList } = useAppStore();
   const [refreshing, setRefreshing] = useState(false);
 
-  const pendingCount = list.filter((item) => item.status === 'pending').length;
-  const submittedCount = list.filter((item) => item.status === 'submitted').length;
-  const verifiedCount = list.filter((item) => item.status === 'verified').length;
+  const pendingCount = rectifyList.filter((item) => item.status === 'pending').length;
+  const submittedCount = rectifyList.filter((item) => item.status === 'submitted').length;
+  const verifiedCount = rectifyList.filter((item) => item.status === 'verified').length;
+
+  useDidShow(() => {
+    console.log('[RectifyPage] 页面显示，列表数量:', rectifyList.length);
+  });
 
   const handleSubmit = (id: string, e) => {
     e.stopPropagation();
@@ -46,10 +49,6 @@ const RectifyPage: React.FC = () => {
     });
   };
 
-  React.useEffect(() => {
-    console.log('[RectifyPage] 页面加载，待整改数:', pendingCount);
-  }, [pendingCount]);
-
   return (
     <ScrollView
       className={styles.page}
@@ -76,8 +75,8 @@ const RectifyPage: React.FC = () => {
       </View>
 
       <View className={styles.rectifyList}>
-        {list.length > 0 ? (
-          list.map((item) => (
+        {rectifyList.length > 0 ? (
+          rectifyList.map((item) => (
             <View key={item.id} className={styles.rectifyItem}>
               <View className={styles.itemHeader}>
                 <Text className={styles.itemTitle}>{item.title}</Text>
@@ -97,7 +96,7 @@ const RectifyPage: React.FC = () => {
                 <Button
                   className={classnames(
                     styles.submitBtn,
-                    item.status !== 'pending' && styles.submitted
+                    item.status === 'verified' && styles.submitted
                   )}
                   onClick={(e) => handleSubmit(item.id, e)}
                 >

@@ -4,13 +4,12 @@ import classnames from 'classnames';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import OrderCard from '@/components/OrderCard';
-import { mockOrders } from '@/data/mockData';
-import { PourOrder } from '@/types';
+import { useAppStore } from '@/store';
 
 type TabType = 'all' | 'pending' | 'confirmed';
 
 const OrderPage: React.FC = () => {
-  const [orders, setOrders] = useState<PourOrder[]>(mockOrders);
+  const { orders, confirmOrder } = useAppStore();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -25,23 +24,12 @@ const OrderPage: React.FC = () => {
     console.log('[OrderPage] 确认指令:', id);
     Taro.showModal({
       title: '确认收到',
-      content: '请确认已收到该指令并通知相关作业人员',
+      content: '请确认已收到该指令并通知相关作业人员立即执行',
       confirmText: '确认',
       cancelText: '取消',
       success: (res) => {
         if (res.confirm) {
-          setOrders((prev) =>
-            prev.map((o) =>
-              o.id === id
-                ? {
-                    ...o,
-                    status: 'confirmed' as const,
-                    confirmTime: '2024-01-15 22:35',
-                    confirmer: '李班长'
-                  }
-                : o
-            )
-          );
+          confirmOrder(id);
           Taro.showToast({
             title: '确认成功',
             icon: 'success',
@@ -90,19 +78,19 @@ const OrderPage: React.FC = () => {
           className={classnames(styles.tabItem, activeTab === 'all' && styles.active)}
           onClick={() => setActiveTab('all')}
         >
-          全部
+          全部 ({orders.length})
         </View>
         <View
           className={classnames(styles.tabItem, activeTab === 'pending' && styles.active)}
           onClick={() => setActiveTab('pending')}
         >
-          待确认
+          待确认 ({pendingCount})
         </View>
         <View
           className={classnames(styles.tabItem, activeTab === 'confirmed' && styles.active)}
           onClick={() => setActiveTab('confirmed')}
         >
-          已确认
+          已确认 ({orders.length - pendingCount})
         </View>
       </View>
 

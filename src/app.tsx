@@ -1,19 +1,22 @@
 import React, { useEffect } from 'react';
 import { useDidShow, useDidHide } from '@tarojs/taro';
-// 全局样式
+import { AppProvider } from '@/store';
 import './app.scss';
 
 function App(props) {
-  // 可以使用所有的 React Hooks
-  useEffect(() => {});
+  useEffect(() => {
+    console.log('[App] 应用初始化');
+  }, []);
 
-  // 对应 onShow
-  useDidShow(() => {});
+  useDidShow(() => {
+    console.log('[App] 应用显示');
+  });
 
-  // 对应 onHide
-  useDidHide(() => {});
+  useDidHide(() => {
+    console.log('[App] 应用隐藏');
+  });
 
-  return props.children;
+  return <AppProvider>{props.children}</AppProvider>;
 }
 
 export default App;

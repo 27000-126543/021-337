@@ -3,27 +3,26 @@ import { View, Text, Button, ScrollView } from '@tarojs/components';
 import classnames from 'classnames';
 import Taro, { useRouter } from '@tarojs/taro';
 import styles from './index.module.scss';
-import { mockOrders } from '@/data/mockData';
+import { useAppStore } from '@/store';
 import { PourOrder } from '@/types';
 
 const OrderDetailPage: React.FC = () => {
   const router = useRouter();
   const orderId = router.params.id;
+  const { orders, confirmOrder } = useAppStore();
   const [order, setOrder] = useState<PourOrder | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
     console.log('[OrderDetailPage] 页面加载，订单ID:', orderId);
-    const found = mockOrders.find((o) => o.id === orderId);
+    const found = orders.find((o) => o.id === orderId);
     if (found) {
       setOrder(found);
-      setConfirmed(found.status === 'confirmed');
     }
-  }, [orderId]);
+  }, [orderId, orders]);
 
   const handleConfirm = () => {
-    if (confirmed) return;
-    
+    if (!order || order.status === 'confirmed') return;
+
     console.log('[OrderDetailPage] 确认指令');
     Taro.showModal({
       title: '确认收到指令',
@@ -32,7 +31,7 @@ const OrderDetailPage: React.FC = () => {
       cancelText: '取消',
       success: (res) => {
         if (res.confirm) {
-          setConfirmed(true);
+          confirmOrder(order.id);
           Taro.showToast({
             title: '确认成功',
             icon: 'success',
@@ -46,10 +45,12 @@ const OrderDetailPage: React.FC = () => {
   if (!order) {
     return (
       <View className={styles.page}>
-        <Text style={{ padding: '32rpx' }}>加载中...</Text>
+        <Text style={{ padding: '32rpx', color: '#86909c' }}>加载中...</Text>
       </View>
     );
   }
+
+  const confirmed = order.status === 'confirmed';
 
   return (
     <ScrollView className={styles.page} scrollY>
