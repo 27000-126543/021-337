@@ -11,6 +11,9 @@ export interface MeasurePoint {
   level: RiskLevel;
   location: string;
   updateTime: string;
+  suggestion: string;
+  relatedOrderIds: string[];
+  relatedRectifyIds: string[];
 }
 
 export interface ForbiddenArea {
@@ -36,6 +39,13 @@ export interface ConstructionSection {
 export type OrderType = 'stop_pouring' | 'slow_pouring';
 export type OrderStatus = 'pending' | 'confirmed';
 
+export interface SignRecord {
+  id: string;
+  confirmerName: string;
+  confirmerRole: string;
+  confirmTime: string;
+}
+
 export interface PourOrder {
   id: string;
   type: OrderType;
@@ -47,12 +57,11 @@ export interface PourOrder {
   publishTime: string;
   publisher: string;
   status: OrderStatus;
-  confirmTime?: string;
-  confirmer?: string;
+  signRecords: SignRecord[];
   affectedPoints: string[];
 }
 
-export type RectifyStatus = 'pending' | 'submitted' | 'verified';
+export type RectifyStatus = 'pending' | 'submitted' | 'approved' | 'rejected';
 
 export interface RectifyItem {
   id: string;
@@ -67,6 +76,17 @@ export interface RectifyItem {
   voiceDesc?: string;
   type: 'scissors_brace' | 'base_plate' | 'jacking';
   typeLabel: string;
+  rejectReason?: string;
+  reviewer?: string;
+  reviewTime?: string;
+}
+
+export interface RectifySubmission {
+  photos: string[];
+  voicePath?: string;
+  voiceDuration: number;
+  textDesc: string;
+  submitTime: string;
 }
 
 export interface RectifyPhotoItem {

@@ -113,3 +113,221 @@
   font-size: $font-size-md;
   text-align: center;
 }
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modalContent {
+  width: 100%;
+  max-height: 80vh;
+  background: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  overflow: hidden;
+}
+
+.modalHeader {
+  padding: $spacing-lg $spacing-xl;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &.safe {
+    background: $color-safe;
+  }
+
+  &.warning {
+    background: $color-warning;
+  }
+
+  &.danger {
+    background: $color-danger;
+  }
+}
+
+.modalTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+}
+
+.modalClose {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 40rpx;
+}
+
+.modalBody {
+  padding: $spacing-lg $spacing-xl;
+  max-height: 70vh;
+}
+
+.modalInfo {
+  margin-bottom: $spacing-lg;
+}
+
+.modalInfoRow {
+  display: flex;
+  justify-content: space-between;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.modalInfoLabel {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.modalInfoValue {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+
+  &.safe {
+    color: $color-safe;
+  }
+
+  &.warning {
+    color: $color-warning;
+  }
+
+  &.danger {
+    color: $color-danger;
+  }
+}
+
+.suggestionCard {
+  background: $color-warning-bg;
+  border-radius: $radius-md;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.suggestionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-warning;
+  margin-bottom: $spacing-sm;
+}
+
+.suggestionText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: 1.8;
+}
+
+.relatedSection {
+  margin-bottom: $spacing-lg;
+}
+
+.relatedTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.relatedItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.relatedItemLeft {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex: 1;
+  min-width: 0;
+}
+
+.relatedTypeTag {
+  font-size: $font-size-xs;
+  padding: 2rpx 12rpx;
+  border-radius: $radius-xs;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.stop_pouring {
+    background: $color-danger-bg;
+    color: $color-danger;
+  }
+
+  &.slow_pouring {
+    background: $color-warning-bg;
+    color: $color-warning;
+  }
+}
+
+.relatedStatusTag {
+  font-size: $font-size-xs;
+  padding: 2rpx 12rpx;
+  border-radius: $radius-xs;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.pending {
+    background: $color-warning-bg;
+    color: $color-warning;
+  }
+
+  &.submitted {
+    background: rgba($color-primary, 0.1);
+    color: $color-primary;
+  }
+
+  &.approved {
+    background: $color-safe-bg;
+    color: $color-safe;
+  }
+
+  &.rejected {
+    background: $color-danger-bg;
+    color: $color-danger;
+  }
+}
+
+.relatedItemTitle {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.relatedArrow {
+  font-size: 40rpx;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+}
+
+.noRelated {
+  text-align: center;
+  padding: $spacing-lg 0;
+  color: $color-text-tertiary;
+  font-size: $font-size-md;
+}

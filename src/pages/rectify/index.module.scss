@@ -14,19 +14,19 @@
 
 .statRow {
   display: flex;
-  gap: $spacing-md;
+  gap: $spacing-sm;
 }
 
 .statItem {
   flex: 1;
   background: $color-bg-page;
   border-radius: $radius-md;
-  padding: $spacing-lg;
+  padding: $spacing-md $spacing-sm;
   text-align: center;
 }
 
 .statNum {
-  font-size: 40rpx;
+  font-size: 36rpx;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
 
@@ -38,15 +38,19 @@
     color: $color-primary;
   }
 
-  &.verified {
+  &.approved {
     color: $color-safe;
+  }
+
+  &.rejected {
+    color: $color-danger;
   }
 }
 
 .statLabel {
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
   color: $color-text-secondary;
-  margin-top: $spacing-xs;
+  margin-top: 4rpx;
 }
 
 .rectifyList {
@@ -93,9 +97,14 @@
     color: $color-primary;
   }
 
-  &.verified {
+  &.approved {
     background: $color-safe-bg;
     color: $color-safe;
+  }
+
+  &.rejected {
+    background: $color-danger-bg;
+    color: $color-danger;
   }
 }
 
@@ -112,6 +121,31 @@
   margin-bottom: $spacing-md;
 }
 
+.rejectBox {
+  background: $color-danger-bg;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.rejectLabel {
+  font-size: $font-size-sm;
+  color: $color-danger;
+  font-weight: $font-weight-medium;
+}
+
+.rejectReason {
+  font-size: $font-size-md;
+  color: $color-danger;
+  line-height: 1.6;
+}
+
+.reviewInfo {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-sm;
+}
+
 .itemFooter {
   display: flex;
   align-items: center;
@@ -123,10 +157,35 @@
 .deadline {
   font-size: $font-size-sm;
   color: $color-text-tertiary;
+  flex: 1;
+}
 
-  .urgent & {
+.actionBtns {
+  display: flex;
+  gap: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  @include button-reset;
+  height: $button-height-sm;
+  padding: 0 $spacing-md;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+  }
+
+  &.approveBtn {
+    background: $color-safe;
+    color: $color-text-white;
+  }
+
+  &.rejectBtn {
+    background: $color-danger-bg;
     color: $color-danger;
-    font-weight: $font-weight-medium;
   }
 }
 
@@ -144,7 +203,7 @@
     opacity: 0.9;
   }
 
-  &.submitted {
+  &.viewOnly {
     background: $color-bg-hover;
     color: $color-text-tertiary;
   }

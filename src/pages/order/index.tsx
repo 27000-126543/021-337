@@ -23,18 +23,18 @@ const OrderPage: React.FC = () => {
   const handleConfirm = (id: string) => {
     console.log('[OrderPage] 确认指令:', id);
     Taro.showModal({
-      title: '确认收到',
-      content: '请确认已收到该指令并通知相关作业人员立即执行',
-      confirmText: '确认',
+      title: '签收确认',
+      content: '请确认已收到该指令，签收后将记录您的确认信息',
+      confirmText: '确认签收',
       cancelText: '取消',
       success: (res) => {
         if (res.confirm) {
-          confirmOrder(id);
-          Taro.showToast({
-            title: '确认成功',
-            icon: 'success',
-            duration: 1500
-          });
+          const success = confirmOrder(id, '当前班长', '班组长');
+          if (success) {
+            Taro.showToast({ title: '签收成功', icon: 'success', duration: 1500 });
+          } else {
+            Taro.showToast({ title: '您已确认过该指令', icon: 'none', duration: 2000 });
+          }
         }
       }
     });
@@ -44,17 +44,9 @@ const OrderPage: React.FC = () => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
-      Taro.showToast({
-        title: '刷新成功',
-        icon: 'success',
-        duration: 1500
-      });
+      Taro.showToast({ title: '刷新成功', icon: 'success', duration: 1500 });
     }, 1000);
   };
-
-  React.useEffect(() => {
-    console.log('[OrderPage] 页面加载，待确认指令数:', pendingCount);
-  }, [pendingCount]);
 
   return (
     <ScrollView
@@ -97,11 +89,16 @@ const OrderPage: React.FC = () => {
       <View className={styles.orderList}>
         {filteredOrders.length > 0 ? (
           filteredOrders.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              onConfirm={handleConfirm}
-            />
+            <View key={order.id}>
+              <OrderCard order={order} onConfirm={handleConfirm} />
+              {order.signRecords.length > 0 && (
+                <View className={styles.signSummary}>
+                  <Text className={styles.signSummaryText}>
+                    已签收 {order.signRecords.length} 人：{order.signRecords.map((s) => s.confirmerName).join('、')}
+                  </Text>
+                </View>
+              )}
+            </View>
           ))
         ) : (
           <View className={styles.emptyState}>

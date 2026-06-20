@@ -21,7 +21,10 @@ export const mockSection: ConstructionSection = {
       threshold: 10,
       level: 'warning',
       location: 'A区中部',
-      updateTime: '2024-01-15 22:28'
+      updateTime: '2024-01-15 22:28',
+      suggestion: '沉降接近预警值，建议暂停该区域浇筑，检查立杆底座和垫板是否松动，必要时加固剪刀撑',
+      relatedOrderIds: ['order-001'],
+      relatedRectifyIds: ['rect-001']
     },
     {
       id: 'mp-002',
@@ -33,7 +36,10 @@ export const mockSection: ConstructionSection = {
       threshold: 3,
       level: 'warning',
       location: 'B区北侧',
-      updateTime: '2024-01-15 22:25'
+      updateTime: '2024-01-15 22:25',
+      suggestion: '倾角变化过快，建议检查支撑体系是否到位，暂停振捣作业，检查顶托是否松动',
+      relatedOrderIds: ['order-001'],
+      relatedRectifyIds: ['rect-004']
     },
     {
       id: 'mp-003',
@@ -45,7 +51,10 @@ export const mockSection: ConstructionSection = {
       threshold: 50,
       level: 'warning',
       location: 'C区东侧',
-      updateTime: '2024-01-15 22:20'
+      updateTime: '2024-01-15 22:20',
+      suggestion: '轴力接近限值，建议检查该区域堆载是否超标，减少一次性浇筑厚度',
+      relatedOrderIds: ['order-001'],
+      relatedRectifyIds: []
     },
     {
       id: 'mp-004',
@@ -57,7 +66,10 @@ export const mockSection: ConstructionSection = {
       threshold: 10,
       level: 'safe',
       location: 'A区西侧',
-      updateTime: '2024-01-15 22:30'
+      updateTime: '2024-01-15 22:30',
+      suggestion: '',
+      relatedOrderIds: [],
+      relatedRectifyIds: []
     },
     {
       id: 'mp-005',
@@ -69,7 +81,10 @@ export const mockSection: ConstructionSection = {
       threshold: 3,
       level: 'safe',
       location: 'B区中部',
-      updateTime: '2024-01-15 22:29'
+      updateTime: '2024-01-15 22:29',
+      suggestion: '',
+      relatedOrderIds: [],
+      relatedRectifyIds: []
     }
   ],
   forbiddenAreas: [
@@ -109,7 +124,10 @@ export const mockSections: ConstructionSection[] = [
         threshold: 10,
         level: 'safe',
         location: 'B区西侧',
-        updateTime: '2024-01-15 22:28'
+        updateTime: '2024-01-15 22:28',
+        suggestion: '',
+        relatedOrderIds: [],
+        relatedRectifyIds: []
       }
     ],
     forbiddenAreas: []
@@ -147,6 +165,7 @@ export const mockOrders: PourOrder[] = [
     publishTime: '2024-01-15 22:10',
     publisher: '张工（安全总监）',
     status: 'pending',
+    signRecords: [],
     affectedPoints: ['A-12号立杆', 'B-05号模板', 'C-08号立杆']
   },
   {
@@ -160,8 +179,20 @@ export const mockOrders: PourOrder[] = [
     publishTime: '2024-01-15 20:30',
     publisher: '李工（技术负责人）',
     status: 'confirmed',
-    confirmTime: '2024-01-15 20:35',
-    confirmer: '王班长',
+    signRecords: [
+      {
+        id: 'sign-001',
+        confirmerName: '王班长',
+        confirmerRole: '架子工班组长',
+        confirmTime: '2024-01-15 20:35'
+      },
+      {
+        id: 'sign-002',
+        confirmerName: '赵班长',
+        confirmerRole: '混凝土班组长',
+        confirmTime: '2024-01-15 20:37'
+      }
+    ],
     affectedPoints: ['B-05号模板', 'B-10号模板']
   },
   {
@@ -175,8 +206,14 @@ export const mockOrders: PourOrder[] = [
     publishTime: '2024-01-15 21:45',
     publisher: '张工（安全总监）',
     status: 'confirmed',
-    confirmTime: '2024-01-15 21:48',
-    confirmer: '赵班长',
+    signRecords: [
+      {
+        id: 'sign-003',
+        confirmerName: '赵班长',
+        confirmerRole: '架子工班组长',
+        confirmTime: '2024-01-15 21:48'
+      }
+    ],
     affectedPoints: ['C-01立杆', 'C-03立杆', 'C-07模板', 'C-09模板', 'C-11立杆']
   }
 ];
@@ -200,7 +237,7 @@ export const mockRectifyList: RectifyItem[] = [
     issueDesc: '部分立杆垫板下沉，需更换加厚垫板',
     deadline: '2024-01-16 12:00',
     status: 'submitted',
-    statusText: '已提交',
+    statusText: '待审核',
     submitTime: '2024-01-16 07:30',
     type: 'base_plate',
     typeLabel: '垫板'
@@ -211,9 +248,11 @@ export const mockRectifyList: RectifyItem[] = [
     sectionName: '二层C区',
     issueDesc: '顶托伸出长度超标，需调整立杆高度',
     deadline: '2024-01-15 24:00',
-    status: 'verified',
-    statusText: '已验收',
+    status: 'approved',
+    statusText: '已通过',
     submitTime: '2024-01-15 22:00',
+    reviewer: '张工',
+    reviewTime: '2024-01-15 23:00',
     type: 'jacking',
     typeLabel: '顶托'
   },
@@ -223,9 +262,24 @@ export const mockRectifyList: RectifyItem[] = [
     sectionName: '地下一层A区',
     issueDesc: '缺少横向剪刀撑，需按规范补充',
     deadline: '2024-01-16 10:00',
-    status: 'pending',
-    statusText: '待整改',
+    status: 'rejected',
+    statusText: '已打回',
+    submitTime: '2024-01-15 22:00',
+    rejectReason: '照片不清晰，无法确认加固位置，请重新拍照上传，确保能看到立杆编号和加固部位',
+    reviewer: '张工',
+    reviewTime: '2024-01-15 23:10',
     type: 'scissors_brace',
     typeLabel: '剪刀撑'
+  },
+  {
+    id: 'rect-005',
+    title: 'A区西侧垫板更换',
+    sectionName: '地下一层A区',
+    issueDesc: 'A-05立杆垫板出现裂纹，需更换',
+    deadline: '2024-01-16 14:00',
+    status: 'pending',
+    statusText: '待整改',
+    type: 'base_plate',
+    typeLabel: '垫板'
   }
 ];

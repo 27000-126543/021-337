@@ -22,8 +22,10 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onConfirm }) => {
     onConfirm?.(order.id);
   };
 
+  const signCount = order.signRecords.length;
+
   return (
-    <View 
+    <View
       className={classnames(styles.orderCard, order.status === 'pending' && styles.pending)}
       onClick={handleViewDetail}
     >
@@ -32,7 +34,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onConfirm }) => {
           {order.typeLabel}
         </View>
         <View className={classnames(styles.statusTag, styles[order.status])}>
-          {order.status === 'pending' ? '待确认' : '已确认'}
+          {order.status === 'pending' ? '待确认' : `已确认${signCount > 0 ? `(${signCount}人)` : ''}`}
         </View>
       </View>
 
@@ -43,14 +45,14 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onConfirm }) => {
       <View className={styles.orderFooter}>
         <Text className={styles.orderTime}>发布时间：{order.publishTime}</Text>
         {order.status === 'pending' ? (
-          <Button 
+          <Button
             className={styles.confirmBtn}
             onClick={handleConfirm}
           >
             确认收到
           </Button>
         ) : (
-          <Button 
+          <Button
             className={styles.viewBtn}
             onClick={handleViewDetail}
           >

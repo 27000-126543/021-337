@@ -20,23 +20,24 @@ const OrderDetailPage: React.FC = () => {
     }
   }, [orderId, orders]);
 
-  const handleConfirm = () => {
-    if (!order || order.status === 'confirmed') return;
+  const alreadySignedByMe = order?.signRecords.some((r) => r.confirmerName === '当前班长') ?? false;
 
-    console.log('[OrderDetailPage] 确认指令');
+  const handleConfirm = () => {
+    if (!order || alreadySignedByMe) return;
+
     Taro.showModal({
-      title: '确认收到指令',
-      content: '请确认已收到该指令，并立即通知所有相关作业人员执行。',
-      confirmText: '确认收到',
+      title: '签收确认',
+      content: '请确认已收到该指令，签收后将记录您的确认信息',
+      confirmText: '确认签收',
       cancelText: '取消',
       success: (res) => {
         if (res.confirm) {
-          confirmOrder(order.id);
-          Taro.showToast({
-            title: '确认成功',
-            icon: 'success',
-            duration: 1500
-          });
+          const success = confirmOrder(order.id, '当前班长', '班组长');
+          if (success) {
+            Taro.showToast({ title: '签收成功', icon: 'success', duration: 1500 });
+          } else {
+            Taro.showToast({ title: '您已确认过该指令', icon: 'none', duration: 2000 });
+          }
         }
       }
     });
@@ -87,31 +88,33 @@ const OrderDetailPage: React.FC = () => {
             <Text className={styles.infoLabel}>发布时间</Text>
             <Text className={styles.infoValue}>{order.publishTime}</Text>
           </View>
-          {confirmed && order.confirmTime && (
-            <>
-              <View className={styles.infoRow}>
-                <Text className={styles.infoLabel}>确认人</Text>
-                <Text className={styles.infoValue}>{order.confirmer}</Text>
-              </View>
-              <View className={styles.infoRow}>
-                <Text className={styles.infoLabel}>确认时间</Text>
-                <Text className={styles.infoValue}>{order.confirmTime}</Text>
-              </View>
-            </>
-          )}
         </View>
+
+        {order.signRecords.length > 0 && (
+          <View className={styles.card}>
+            <Text className={styles.cardTitle}>签收记录 ({order.signRecords.length}人)</Text>
+            {order.signRecords.map((record) => (
+              <View key={record.id} className={styles.signRecord}>
+                <View className={styles.signRecordLeft}>
+                  <Text className={styles.signRecordName}>{record.confirmerName}</Text>
+                  <Text className={styles.signRecordRole}>{record.confirmerRole}</Text>
+                </View>
+                <Text className={styles.signRecordTime}>{record.confirmTime}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
       <View className={styles.footer}>
-        {confirmed ? (
-          <View className={styles.confirmedBadge}>
-            ✓ 已确认收到
-          </View>
+        {alreadySignedByMe ? (
+          <View className={styles.confirmedBadge}>✓ 您已签收</View>
+        ) : confirmed ? (
+          <Button className={styles.confirmBtn} onClick={handleConfirm}>
+            签收确认
+          </Button>
         ) : (
-          <Button
-            className={classnames(styles.confirmBtn, confirmed && styles.disabled)}
-            onClick={handleConfirm}
-          >
+          <Button className={styles.confirmBtn} onClick={handleConfirm}>
             确认收到
           </Button>
         )}

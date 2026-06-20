@@ -81,3 +81,15 @@
   font-size: 96rpx;
   margin-bottom: $spacing-md;
 }
+
+.signSummary {
+  padding: $spacing-sm $spacing-lg;
+  margin-bottom: $spacing-md;
+  background: $color-safe-bg;
+  border-radius: $radius-md;
+}
+
+.signSummaryText {
+  font-size: $font-size-sm;
+  color: $color-safe;
+}

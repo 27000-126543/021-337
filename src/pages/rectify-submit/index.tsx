@@ -5,7 +5,7 @@ import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import { useAppStore } from '@/store';
 import { useRecorder } from '@/hooks/useRecorder';
-import { RectifyItem } from '@/types';
+import { RectifyItem, RectifySubmission } from '@/types';
 
 const typeOptions = [
   { value: 'scissors_brace', label: '剪刀撑' },
@@ -19,13 +19,15 @@ const RectifySubmitPage: React.FC = () => {
   const initType = router.params.type;
 
   const { rectifyList, submitRectify, getRectifySubmission } = useAppStore();
-  
+
   const [rectifyItem, setRectifyItem] = useState<RectifyItem | null>(null);
   const [activeType, setActiveType] = useState<string>(initType || 'scissors_brace');
   const [photos, setPhotos] = useState<string[]>([]);
   const [textDesc, setTextDesc] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
+  const [savedVoiceDuration, setSavedVoiceDuration] = useState(0);
+  const [savedVoicePath, setSavedVoicePath] = useState('');
 
   const {
     isRecording,
@@ -61,22 +63,31 @@ const RectifySubmitPage: React.FC = () => {
       if (found) {
         setRectifyItem(found);
         setActiveType(found.type);
-        if (found.status !== 'pending') {
-          const submission = getRectifySubmission(rectifyId);
-          if (submission) {
-            setPhotos(submission.photos);
-            setTextDesc(submission.textDesc);
-          } else if (found.status === 'verified') {
-            setPhotos([
-              'https://picsum.photos/id/787/300/300',
-              'https://picsum.photos/id/787/300/301'
-            ]);
-            setTextDesc('已按规范加固剪刀撑，检查合格。');
-          }
+
+        const submission = getRectifySubmission(rectifyId);
+        if (submission) {
+          setPhotos(submission.photos || []);
+          setTextDesc(submission.textDesc || '');
+          setSavedVoiceDuration(submission.voiceDuration || 0);
+          setSavedVoicePath(submission.voicePath || '');
+        } else if (found.status === 'approved') {
+          setPhotos([
+            'https://picsum.photos/id/787/300/300',
+            'https://picsum.photos/id/787/300/301'
+          ]);
+          setTextDesc('已按规范加固剪刀撑，检查合格。');
+          setSavedVoiceDuration(45);
+        }
+
+        if (found.status === 'rejected') {
+          setPhotos([]);
+          setTextDesc('');
+          setSavedVoiceDuration(0);
+          setSavedVoicePath('');
         }
       }
     }
-  }, [rectifyId, rectifyList, getRectifySubmission]);
+  }, [rectifyId]);
 
   useDidShow(() => {
     console.log('[RectifySubmitPage] 页面显示');
@@ -104,7 +115,7 @@ const RectifySubmitPage: React.FC = () => {
   };
 
   const handleVoiceClick = () => {
-    if (hasRecorded) return;
+    if (hasRecorded || savedVoiceDuration > 0) return;
     if (isRecording) {
       stopRecord();
     } else {
@@ -132,22 +143,35 @@ const RectifySubmitPage: React.FC = () => {
     }
   };
 
+  const handlePlaySavedVoice = () => {
+    if (savedVoicePath) {
+      const ctx = Taro.createInnerAudioContext();
+      ctx.src = savedVoicePath;
+      ctx.onPlay(() => console.log('[RectifySubmitPage] 播放已保存录音'));
+      ctx.onError((err) => {
+        console.error('[RectifySubmitPage] 播放失败:', err);
+        Taro.showToast({ title: '语音播放失败', icon: 'none', duration: 1500 });
+      });
+      ctx.play();
+    } else {
+      Taro.showToast({ title: `语音说明 ${savedVoiceDuration}"`, icon: 'none', duration: 1500 });
+    }
+  };
+
+  const handleDeleteVoice = () => {
+    deleteVoice();
+    setSavedVoiceDuration(0);
+    setSavedVoicePath('');
+  };
+
   const handleSubmit = () => {
     if (photos.length === 0) {
-      Taro.showToast({
-        title: '请上传整改照片',
-        icon: 'none',
-        duration: 2000
-      });
+      Taro.showToast({ title: '请上传整改照片', icon: 'none', duration: 2000 });
       return;
     }
 
-    if (!hasRecorded && !textDesc.trim()) {
-      Taro.showToast({
-        title: '请输入文字说明或语音说明',
-        icon: 'none',
-        duration: 2000
-      });
+    if (!hasRecorded && savedVoiceDuration === 0 && !textDesc.trim()) {
+      Taro.showToast({ title: '请输入文字说明或语音说明', icon: 'none', duration: 2000 });
       return;
     }
 
@@ -162,8 +186,8 @@ const RectifySubmitPage: React.FC = () => {
           setSubmitting(true);
           submitRectify(submitId, {
             photos,
-            voicePath,
-            voiceDuration: voiceDuration,
+            voicePath: voicePath || savedVoicePath,
+            voiceDuration: hasRecorded ? voiceDuration : savedVoiceDuration,
             textDesc,
             submitTime: new Date().toLocaleString('zh-CN', {
               year: 'numeric',
@@ -176,11 +200,7 @@ const RectifySubmitPage: React.FC = () => {
 
           setTimeout(() => {
             setSubmitting(false);
-            Taro.showToast({
-              title: '提交成功',
-              icon: 'success',
-              duration: 1500
-            });
+            Taro.showToast({ title: '提交成功', icon: 'success', duration: 1500 });
             setTimeout(() => {
               Taro.navigateBack();
             }, 1200);
@@ -190,8 +210,12 @@ const RectifySubmitPage: React.FC = () => {
     });
   };
 
-  const isViewOnly = rectifyItem && rectifyItem.status !== 'pending';
-  const displayDuration = hasRecorded ? voiceDuration : recordSeconds;
+  const isViewOnly = rectifyItem
+    ? rectifyItem.status === 'submitted' || rectifyItem.status === 'approved'
+    : false;
+  const isRejected = rectifyItem?.status === 'rejected';
+  const hasVoiceData = hasRecorded || savedVoiceDuration > 0;
+  const displayDuration = hasRecorded ? voiceDuration : savedVoiceDuration;
 
   return (
     <ScrollView className={styles.page} scrollY>
@@ -224,6 +248,35 @@ const RectifySubmitPage: React.FC = () => {
           </View>
         )}
 
+        {isRejected && rectifyItem?.rejectReason && (
+          <View className={styles.rejectCard}>
+            <Text className={styles.rejectTitle}>打回原因</Text>
+            <Text className={styles.rejectText}>{rectifyItem.rejectReason}</Text>
+            {rectifyItem.reviewer && rectifyItem.reviewTime && (
+              <Text className={styles.rejectMeta}>
+                {rectifyItem.reviewer} {rectifyItem.reviewTime}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {rectifyItem?.status === 'approved' && (
+          <View className={styles.approvedCard}>
+            <Text className={styles.approvedTitle}>✓ 审核已通过</Text>
+            {rectifyItem.reviewer && rectifyItem.reviewTime && (
+              <Text className={styles.approvedMeta}>
+                审核：{rectifyItem.reviewer} {rectifyItem.reviewTime}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {rectifyItem?.status === 'submitted' && (
+          <View className={styles.reviewingCard}>
+            <Text className={styles.reviewingTitle}>等待项目部审核中...</Text>
+          </View>
+        )}
+
         {!rectifyItem && (
           <View className={styles.card}>
             <Text className={styles.cardTitle}>整改类型</Text>
@@ -247,13 +300,13 @@ const RectifySubmitPage: React.FC = () => {
         <View className={styles.card}>
           <Text className={styles.cardTitle}>
             照片上传
-            <Text className={styles.required}>*</Text>
+            {!isViewOnly && <Text className={styles.required}>*</Text>}
           </Text>
           <View className={styles.section}>
             <View className={styles.sectionLabel}>
               <Text>
                 {typeOptions.find((t) => t.value === activeType)?.label}整改照片
-                <Text className={styles.required}>*</Text>
+                {!isViewOnly && <Text className={styles.required}>*</Text>}
               </Text>
               <Text style={{ fontSize: '24rpx', color: '#86909c' }}>
                 {photos.length}/3
@@ -275,10 +328,7 @@ const RectifySubmitPage: React.FC = () => {
                     src={photo}
                     mode="aspectFill"
                     onClick={() => {
-                      Taro.previewImage({
-                        urls: photos,
-                        current: photo
-                      });
+                      Taro.previewImage({ urls: photos, current: photo });
                     }}
                   />
                 </View>
@@ -303,7 +353,7 @@ const RectifySubmitPage: React.FC = () => {
                 </Text>
               )}
             </View>
-            {hasRecorded ? (
+            {hasVoiceData ? (
               <View className={styles.voiceRecorded}>
                 <Button className={styles.playBtn} onClick={handlePlayToggle}>
                   {isPlaying ? '❚❚' : '▶'}
@@ -313,7 +363,7 @@ const RectifySubmitPage: React.FC = () => {
                 </View>
                 <Text className={styles.voiceDuration}>{displayDuration}"</Text>
                 {!isViewOnly && (
-                  <Button className={styles.voiceDelete} onClick={deleteVoice}>
+                  <Button className={styles.voiceDelete} onClick={handleDeleteVoice}>
                     删除
                   </Button>
                 )}
@@ -342,7 +392,7 @@ const RectifySubmitPage: React.FC = () => {
 
           <View className={styles.section} style={{ marginTop: '32rpx' }}>
             <View className={styles.sectionLabel}>
-              <Text>文字说明{!hasRecorded && <Text className={styles.required}>*</Text>}</Text>
+              <Text>文字说明{!hasVoiceData && !isViewOnly && <Text className={styles.required}>*</Text>}</Text>
             </View>
             <Textarea
               className={styles.textarea}
@@ -359,14 +409,11 @@ const RectifySubmitPage: React.FC = () => {
       {!isViewOnly && (
         <View className={styles.footer}>
           <Button
-            className={classnames(
-              styles.submitBtn,
-              submitting && styles.disabled
-            )}
+            className={classnames(styles.submitBtn, submitting && styles.disabled)}
             onClick={handleSubmit}
             disabled={submitting}
           >
-            {submitting ? '提交中...' : '提交整改'}
+            {submitting ? '提交中...' : isRejected ? '重新提交' : '提交整改'}
           </Button>
         </View>
       )}
