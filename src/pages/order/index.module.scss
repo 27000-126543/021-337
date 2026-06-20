@@ -89,7 +89,20 @@
   border-radius: $radius-md;
 }
 
-.signSummaryText {
+.signTeamRow {
+  display: flex;
+  align-items: center;
+  padding: 2rpx 0;
+}
+
+.signTeamLabel {
+  font-size: $font-size-sm;
+  color: $color-safe;
+  font-weight: $font-weight-medium;
+  flex-shrink: 0;
+}
+
+.signTeamNames {
   font-size: $font-size-sm;
   color: $color-safe;
 }

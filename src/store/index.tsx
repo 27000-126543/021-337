@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { PourOrder, RectifyItem, RectifySubmission, SignRecord } from '@/types';
+import { PourOrder, RectifyItem, RectifySubmission, SignRecord, SubmissionHistoryEntry, TeamType } from '@/types';
 import { mockOrders, mockRectifyList } from '@/data/mockData';
 
 interface AppContextType {
   orders: PourOrder[];
   rectifyList: RectifyItem[];
   rectifySubmissions: Record<string, RectifySubmission>;
-  confirmOrder: (orderId: string, confirmerName: string, confirmerRole: string) => boolean;
+  confirmOrder: (orderId: string, confirmerName: string, confirmerRole: string, teamType: TeamType, teamLabel: string) => boolean;
   approveRectify: (rectifyId: string, reviewer: string) => void;
   rejectRectify: (rectifyId: string, reviewer: string, reason: string) => void;
   submitRectify: (rectifyId: string, data: RectifySubmission) => void;
@@ -15,12 +15,17 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const now = () => new Date().toLocaleString('zh-CN', {
+  year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit'
+}).replace(/\//g, '-');
+
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<PourOrder[]>(mockOrders);
   const [rectifyList, setRectifyList] = useState<RectifyItem[]>(mockRectifyList);
   const [rectifySubmissions, setRectifySubmissions] = useState<Record<string, RectifySubmission>>({});
 
-  const confirmOrder = useCallback((orderId: string, confirmerName: string, confirmerRole: string): boolean => {
+  const confirmOrder = useCallback((orderId: string, confirmerName: string, confirmerRole: string, teamType: TeamType, teamLabel: string): boolean => {
     let alreadyConfirmed = false;
     setOrders((prev) =>
       prev.map((o) => {
@@ -34,13 +39,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           id: `sign_${Date.now()}`,
           confirmerName,
           confirmerRole,
-          confirmTime: new Date().toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          }).replace(/\//g, '-')
+          teamType,
+          teamLabel,
+          confirmTime: now()
         };
         const updatedSignRecords = [...o.signRecords, newRecord];
         return {
@@ -52,75 +53,82 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         };
       })
     );
-    console.log('[Store] 确认订单:', orderId, '已确认过:', alreadyConfirmed);
     return !alreadyConfirmed;
   }, []);
 
   const approveRectify = useCallback((rectifyId: string, reviewer: string) => {
-    console.log('[Store] 审核通过:', rectifyId);
     setRectifyList((prev) =>
-      prev.map((r) =>
-        r.id === rectifyId
-          ? {
-              ...r,
-              status: 'approved' as const,
-              statusText: '已通过',
-              reviewer,
-              reviewTime: new Date().toLocaleString('zh-CN', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-              }).replace(/\//g, '-')
-            }
-          : r
-      )
+      prev.map((r) => {
+        if (r.id !== rectifyId) return r;
+        const reviewTime = now();
+        const updatedHistory = r.submissionHistory.map((entry, idx) => {
+          if (idx === r.submissionHistory.length - 1) {
+            return { ...entry, result: 'approved' as const, reviewer, reviewTime };
+          }
+          return entry;
+        });
+        return {
+          ...r,
+          status: 'approved' as const,
+          statusText: '已通过',
+          reviewer,
+          reviewTime,
+          submissionHistory: updatedHistory
+        };
+      })
     );
   }, []);
 
   const rejectRectify = useCallback((rectifyId: string, reviewer: string, reason: string) => {
-    console.log('[Store] 审核打回:', rectifyId, '原因:', reason);
     setRectifyList((prev) =>
-      prev.map((r) =>
-        r.id === rectifyId
-          ? {
-              ...r,
-              status: 'rejected' as const,
-              statusText: '已打回',
-              rejectReason: reason,
-              reviewer,
-              reviewTime: new Date().toLocaleString('zh-CN', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-              }).replace(/\//g, '-')
-            }
-          : r
-      )
+      prev.map((r) => {
+        if (r.id !== rectifyId) return r;
+        const reviewTime = now();
+        const updatedHistory = r.submissionHistory.map((entry, idx) => {
+          if (idx === r.submissionHistory.length - 1) {
+            return { ...entry, result: 'rejected' as const, rejectReason: reason, reviewer, reviewTime };
+          }
+          return entry;
+        });
+        return {
+          ...r,
+          status: 'rejected' as const,
+          statusText: '已打回',
+          rejectReason: reason,
+          reviewer,
+          reviewTime,
+          submissionHistory: updatedHistory
+        };
+      })
     );
   }, []);
 
   const submitRectify = useCallback((rectifyId: string, data: RectifySubmission) => {
-    console.log('[Store] 提交整改:', rectifyId);
     setRectifyList((prev) =>
-      prev.map((r) =>
-        r.id === rectifyId
-          ? {
-              ...r,
-              status: 'submitted' as const,
-              statusText: '待审核',
-              submitTime: data.submitTime,
-              photos: data.photos,
-              voiceDesc: data.voiceDuration > 0 ? `语音说明(${data.voiceDuration}")` : undefined,
-              rejectReason: undefined,
-              reviewer: undefined,
-              reviewTime: undefined
-            }
-          : r
-      )
+      prev.map((r) => {
+        if (r.id !== rectifyId) return r;
+        const newEntry: SubmissionHistoryEntry = {
+          round: r.submissionHistory.length + 1,
+          photos: data.photos,
+          voicePath: data.voicePath,
+          voiceDuration: data.voiceDuration,
+          textDesc: data.textDesc,
+          submitTime: data.submitTime,
+          result: 'pending_review'
+        };
+        return {
+          ...r,
+          status: 'submitted' as const,
+          statusText: '待审核',
+          submitTime: data.submitTime,
+          photos: data.photos,
+          voiceDesc: data.voiceDuration > 0 ? `语音说明(${data.voiceDuration}")` : undefined,
+          rejectReason: undefined,
+          reviewer: undefined,
+          reviewTime: undefined,
+          submissionHistory: [...r.submissionHistory, newEntry]
+        };
+      })
     );
     setRectifySubmissions((prev) => ({
       ...prev,

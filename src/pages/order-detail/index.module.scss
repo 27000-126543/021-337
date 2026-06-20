@@ -212,3 +212,74 @@
   font-size: $font-size-sm;
   color: $color-text-tertiary;
 }
+
+.unsignedCard {
+  background: rgba($color-warning, 0.06);
+  border: 1rpx solid rgba($color-warning, 0.2);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+}
+
+.unsignedTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-warning;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+
+  &::before {
+    content: '';
+    width: 8rpx;
+    height: 32rpx;
+    background: $color-warning;
+    border-radius: $radius-xs;
+    margin-right: $spacing-sm;
+  }
+}
+
+.unsignedItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm 0;
+}
+
+.unsignedName {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.unsignedBtn {
+  @include button-reset;
+  padding: 8rpx 32rpx;
+  background: $color-warning;
+  color: $color-text-white;
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.signTeamGroup {
+  margin-bottom: $spacing-md;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.signTeamGroupTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  margin-bottom: $spacing-xs;
+  padding-bottom: $spacing-xs;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.footerBtns {
+  display: flex;
+  gap: $spacing-md;
+  width: 100%;
+}

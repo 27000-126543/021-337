@@ -38,11 +38,14 @@ export interface ConstructionSection {
 
 export type OrderType = 'stop_pouring' | 'slow_pouring';
 export type OrderStatus = 'pending' | 'confirmed';
+export type TeamType = 'scaffolding' | 'concrete';
 
 export interface SignRecord {
   id: string;
   confirmerName: string;
   confirmerRole: string;
+  teamType: TeamType;
+  teamLabel: string;
   confirmTime: string;
 }
 
@@ -59,9 +62,23 @@ export interface PourOrder {
   status: OrderStatus;
   signRecords: SignRecord[];
   affectedPoints: string[];
+  requiredTeams: TeamType[];
 }
 
 export type RectifyStatus = 'pending' | 'submitted' | 'approved' | 'rejected';
+
+export interface SubmissionHistoryEntry {
+  round: number;
+  photos: string[];
+  voicePath?: string;
+  voiceDuration: number;
+  textDesc: string;
+  submitTime: string;
+  result: 'pending_review' | 'approved' | 'rejected';
+  rejectReason?: string;
+  reviewer?: string;
+  reviewTime?: string;
+}
 
 export interface RectifyItem {
   id: string;
@@ -79,6 +96,7 @@ export interface RectifyItem {
   rejectReason?: string;
   reviewer?: string;
   reviewTime?: string;
+  submissionHistory: SubmissionHistoryEntry[];
 }
 
 export interface RectifySubmission {

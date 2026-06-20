@@ -4,7 +4,12 @@ import classnames from 'classnames';
 import Taro, { useRouter } from '@tarojs/taro';
 import styles from './index.module.scss';
 import { useAppStore } from '@/store';
-import { PourOrder } from '@/types';
+import { PourOrder, TeamType } from '@/types';
+
+const teamLabels: Record<TeamType, string> = {
+  scaffolding: '架子工班组',
+  concrete: '混凝土班组'
+};
 
 const OrderDetailPage: React.FC = () => {
   const router = useRouter();
@@ -13,26 +18,33 @@ const OrderDetailPage: React.FC = () => {
   const [order, setOrder] = useState<PourOrder | null>(null);
 
   useEffect(() => {
-    console.log('[OrderDetailPage] 页面加载，订单ID:', orderId);
     const found = orders.find((o) => o.id === orderId);
-    if (found) {
-      setOrder(found);
-    }
+    if (found) setOrder(found);
   }, [orderId, orders]);
 
   const alreadySignedByMe = order?.signRecords.some((r) => r.confirmerName === '当前班长') ?? false;
 
-  const handleConfirm = () => {
+  const getTeamSignStatus = () => {
+    if (!order) return { signed: [], unsigned: [] };
+    const requiredTeams = order.requiredTeams || ['scaffolding', 'concrete'];
+    const signedTeamTypes = new Set(order.signRecords.map((r) => r.teamType));
+    const signed = requiredTeams.filter((t) => signedTeamTypes.has(t));
+    const unsigned = requiredTeams.filter((t) => !signedTeamTypes.has(t));
+    return { signed, unsigned };
+  };
+
+  const handleConfirm = (teamType: TeamType) => {
     if (!order || alreadySignedByMe) return;
 
+    const teamLabel = teamLabels[teamType];
     Taro.showModal({
       title: '签收确认',
-      content: '请确认已收到该指令，签收后将记录您的确认信息',
+      content: `请确认已收到该指令（${teamLabel}）`,
       confirmText: '确认签收',
       cancelText: '取消',
       success: (res) => {
         if (res.confirm) {
-          const success = confirmOrder(order.id, '当前班长', '班组长');
+          const success = confirmOrder(order.id, '当前班长', '班组长', teamType, teamLabel);
           if (success) {
             Taro.showToast({ title: '签收成功', icon: 'success', duration: 1500 });
           } else {
@@ -44,14 +56,17 @@ const OrderDetailPage: React.FC = () => {
   };
 
   if (!order) {
-    return (
-      <View className={styles.page}>
-        <Text style={{ padding: '32rpx', color: '#86909c' }}>加载中...</Text>
-      </View>
-    );
+    return <View className={styles.page}><Text style={{ padding: '32rpx', color: '#86909c' }}>加载中...</Text></View>;
   }
 
-  const confirmed = order.status === 'confirmed';
+  const { signed, unsigned } = getTeamSignStatus();
+
+  const signRecordsByTeam: Record<string, typeof order.signRecords> = {};
+  order.signRecords.forEach((r) => {
+    const key = r.teamType;
+    if (!signRecordsByTeam[key]) signRecordsByTeam[key] = [];
+    signRecordsByTeam[key].push(r);
+  });
 
   return (
     <ScrollView className={styles.page} scrollY>
@@ -90,16 +105,37 @@ const OrderDetailPage: React.FC = () => {
           </View>
         </View>
 
+        {unsigned.length > 0 && (
+          <View className={styles.unsignedCard}>
+            <Text className={styles.unsignedTitle}>待签收班组</Text>
+            {unsigned.map((team) => (
+              <View key={team} className={styles.unsignedItem}>
+                <Text className={styles.unsignedName}>{teamLabels[team]}</Text>
+                {!alreadySignedByMe && (
+                  <Button className={styles.unsignedBtn} onClick={() => handleConfirm(team)}>
+                    签收
+                  </Button>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
         {order.signRecords.length > 0 && (
           <View className={styles.card}>
-            <Text className={styles.cardTitle}>签收记录 ({order.signRecords.length}人)</Text>
-            {order.signRecords.map((record) => (
-              <View key={record.id} className={styles.signRecord}>
-                <View className={styles.signRecordLeft}>
-                  <Text className={styles.signRecordName}>{record.confirmerName}</Text>
-                  <Text className={styles.signRecordRole}>{record.confirmerRole}</Text>
-                </View>
-                <Text className={styles.signRecordTime}>{record.confirmTime}</Text>
+            <Text className={styles.cardTitle}>签收记录</Text>
+            {Object.entries(signRecordsByTeam).map(([teamType, records]) => (
+              <View key={teamType} className={styles.signTeamGroup}>
+                <Text className={styles.signTeamGroupTitle}>{teamLabels[teamType as TeamType] || teamType}</Text>
+                {records.map((record) => (
+                  <View key={record.id} className={styles.signRecord}>
+                    <View className={styles.signRecordLeft}>
+                      <Text className={styles.signRecordName}>{record.confirmerName}</Text>
+                      <Text className={styles.signRecordRole}>{record.confirmerRole}</Text>
+                    </View>
+                    <Text className={styles.signRecordTime}>{record.confirmTime}</Text>
+                  </View>
+                ))}
               </View>
             ))}
           </View>
@@ -109,14 +145,14 @@ const OrderDetailPage: React.FC = () => {
       <View className={styles.footer}>
         {alreadySignedByMe ? (
           <View className={styles.confirmedBadge}>✓ 您已签收</View>
-        ) : confirmed ? (
-          <Button className={styles.confirmBtn} onClick={handleConfirm}>
-            签收确认
-          </Button>
         ) : (
-          <Button className={styles.confirmBtn} onClick={handleConfirm}>
-            确认收到
-          </Button>
+          <View className={styles.footerBtns}>
+            {unsigned.map((team) => (
+              <Button key={team} className={styles.confirmBtn} onClick={() => handleConfirm(team)}>
+                {teamLabels[team]}签收
+              </Button>
+            ))}
+          </View>
         )}
       </View>
     </ScrollView>
