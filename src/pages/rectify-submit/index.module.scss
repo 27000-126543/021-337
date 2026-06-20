@@ -1,0 +1,289 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 200rpx;
+}
+
+.content {
+  padding: $spacing-lg $page-padding;
+}
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.cardTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+
+  &::before {
+    content: '';
+    width: 8rpx;
+    height: 32rpx;
+    background: $color-primary;
+    border-radius: $radius-xs;
+    margin-right: $spacing-sm;
+  }
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  padding: $spacing-sm 0;
+
+  & + & {
+    border-top: 1rpx solid $color-divider;
+  }
+}
+
+.infoLabel {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  text-align: right;
+  flex: 1;
+  margin-left: $spacing-md;
+}
+
+.section {
+  margin-bottom: $spacing-lg;
+}
+
+.sectionLabel {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.required {
+  color: $color-danger;
+  margin-left: 4rpx;
+}
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-sm;
+}
+
+.photoItem {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  border-radius: $radius-md;
+  overflow: hidden;
+  background: $color-bg-hover;
+}
+
+.photoImg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.addPhoto {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  border: 2rpx dashed $color-border;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $color-bg-hover;
+}
+
+.addIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 56rpx;
+  color: $color-text-tertiary;
+}
+
+.deleteBtn {
+  position: absolute;
+  top: 4rpx;
+  right: 4rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: rgba(0, 0, 0, 0.5);
+  color: $color-text-white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  z-index: 10;
+}
+
+.voiceSection {
+  margin-top: $spacing-lg;
+}
+
+.voiceBtn {
+  @include button-reset;
+  width: 100%;
+  height: 96rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-lg;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+  }
+
+  &.recording {
+    background: $color-danger-bg;
+    color: $color-danger;
+  }
+}
+
+.voiceIcon {
+  font-size: 40rpx;
+}
+
+.voiceRecorded {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md $spacing-lg;
+  background: $color-bg-hover;
+  border-radius: $radius-lg;
+  gap: $spacing-md;
+}
+
+.playBtn {
+  @include button-reset;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: $color-primary;
+  color: $color-text-white;
+  font-size: 28rpx;
+  flex-shrink: 0;
+}
+
+.voiceProgress {
+  flex: 1;
+  height: 8rpx;
+  background: $color-border;
+  border-radius: $radius-xs;
+  overflow: hidden;
+}
+
+.voiceBar {
+  height: 100%;
+  width: 60%;
+  background: $color-primary;
+  border-radius: $radius-xs;
+}
+
+.voiceDuration {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.voiceDelete {
+  @include button-reset;
+  color: $color-danger;
+  font-size: $font-size-sm;
+  flex-shrink: 0;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 200rpx;
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-lg $page-padding;
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+}
+
+.submitBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: $color-primary;
+  color: $color-text-white;
+  border-radius: $radius-button;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.99);
+  }
+
+  &.disabled {
+    background: $color-bg-hover;
+    color: $color-text-tertiary;
+  }
+}
+
+.typeTabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.typeTab {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  transition: all $transition-base;
+
+  &.active {
+    background: $color-primary;
+    color: $color-text-white;
+  }
+
+  &:active {
+    opacity: 0.9;
+  }
+}

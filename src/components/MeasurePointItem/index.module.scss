@@ -1,0 +1,89 @@
+@use '@/styles/variables.scss' as *;
+
+.pointItem {
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  align-items: center;
+  border-left: 8rpx solid $color-border;
+
+  &.safe {
+    border-left-color: $color-safe;
+  }
+
+  &.warning {
+    border-left-color: $color-warning;
+  }
+
+  &.danger {
+    border-left-color: $color-danger;
+  }
+}
+
+.pointInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.pointName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.pointMeta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.pointType {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  background: $color-divider;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-xs;
+}
+
+.pointLocation {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.pointValue {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.valueText {
+  font-size: 36rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+
+  .safe & {
+    color: $color-safe;
+  }
+
+  .warning & {
+    color: $color-warning;
+  }
+
+  .danger & {
+    color: $color-danger;
+  }
+}
+
+.valueUnit {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-left: 4rpx;
+}
+
+.thresholdText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
